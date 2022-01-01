@@ -19,7 +19,7 @@ void EXTIX_Init(void)
 	  KEY_Init();//初始化按键对应io模式
 
     //GPIOC.5 中断线以及中断初始化配置
-  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC,GPIO_PinSource5);
+  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource5);
 
   	EXTI_InitStructure.EXTI_Line=EXTI_Line5;
   	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
@@ -28,7 +28,7 @@ void EXTIX_Init(void)
   	EXTI_Init(&EXTI_InitStructure);	 	//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
 
     //GPIOA.15	  中断线以及中断初始化配置
-  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOA,GPIO_PinSource15);
+  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource6);
 
   	EXTI_InitStructure.EXTI_Line=EXTI_Line15;
   	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
@@ -37,7 +37,7 @@ void EXTIX_Init(void)
   	EXTI_Init(&EXTI_InitStructure);	  	//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
 
     //GPIOA.0	  中断线以及中断初始化配置
-  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOA,GPIO_PinSource0);
+  	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource7);
 
    	EXTI_InitStructure.EXTI_Line=EXTI_Line0;
   	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
@@ -71,23 +71,25 @@ void EXTIX_Init(void)
  
 }
 
- extern int flag;
+ extern int MaxTemp;
 void EXTI0_IRQHandler(void)
 {
+	OSIntEnter();
   delay_ms(10);    //消抖
-	if(WK_UP==1)
+	if(KEY3==0)
 	{	  
 		LED3=!LED3;
 		LED4=!LED4;	
 	}
 	EXTI_ClearITPendingBit(EXTI_Line0);
+	OSIntExit();
 }
  void EXTI9_5_IRQHandler(void)
 {
 		OSIntEnter();
 	delay_ms(10);   //消抖			 
-	if(KEY0==0)	{
-		flag=0;
+	if(KEY1==0)	{
+		MaxTemp++;
 
 	}
  	 EXTI_ClearITPendingBit(EXTI_Line5);    //清除LINE5上的中断标志位  
@@ -99,8 +101,8 @@ void EXTI15_10_IRQHandler(void)
 {
 	OSIntEnter();
   delay_ms(10);    //消抖			 
-  if(KEY1==0)	{
-		flag=1;
+  if(KEY2==0)	{
+		MaxTemp--;
 		
 	}
 	 EXTI_ClearITPendingBit(EXTI_Line15);  //清除LINE15线路挂起位

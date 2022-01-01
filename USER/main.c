@@ -65,7 +65,7 @@ void DISPLAY_task(void *pdata);
 __align(8) OS_STK USART_TASK_STK[USART_STK_SIZE]; 
 //ÈÎÎñº¯Êý
 void usart_task(void *pdata);
-int flag=1;
+int MaxTemp=20;
 u8 buffer[5];
 u8 u1buffer[4]={0};   
 u8 u2buffer[4]={0};   
@@ -109,7 +109,7 @@ void start_task(void *pdata)
 	OS_ENTER_CRITICAL();  //½øÈëÁÙ½çÇø(¹Ø±ÕÖÐ¶Ï)
 	OSTaskCreate(DHT11_task,(void*)0,(OS_STK*)&DHT11_TASK_STK[DHT11_STK_SIZE-1],DHT11_TASK_PRIO);//´´½¨DHT11
 	//OSTaskCreate(DS18B20_task,(void*)0,(OS_STK*)&DS18B20_TASK_STK[DS18B20_STK_SIZE-1],DS18B20_TASK_PRIO);//´´½¨DHT11
-//OSTaskCreate(USARTSEND_task,(void*)0,(OS_STK*)&USARTSEND_TASK_STK[USARTSEND_STK_SIZE-1],USARTSEND_TASK_PRIO);//´´½¨¸¡µã²âÊÔÈÎÎñ
+  OSTaskCreate(USARTSEND_task,(void*)0,(OS_STK*)&USARTSEND_TASK_STK[USARTSEND_STK_SIZE-1],USARTSEND_TASK_PRIO);//
 	OSTaskCreate(DISPLAY_task,(void*)0,(OS_STK*)&DISPLAY_TASK_STK[DISPLAY_STK_SIZE-1],DISPLAY_TASK_PRIO);//´
 	OSTaskCreate(usart_task,(void*)0,(OS_STK*)&USART_TASK_STK[USART_STK_SIZE-1],USART_TASK_PRIO);//
 	OSTaskSuspend(START_TASK_PRIO);//¹ÒÆð¿ªÊ¼ÈÎÎñ
@@ -182,11 +182,11 @@ void usart_task(void *pdata){
 				rec[t]='\0';
 			OS_ENTER_CRITICAL();	//½øÈëÁÙ½çÇø(¹Ø±ÕÖÐ¶Ï)
 			if(strcmp(rec,Test)==0){
-				flag=1;
+				
 			};
 			if(strcmp(rec,close)==0){
-				flag=0;
-			}
+				
+		 	}
 			OS_EXIT_CRITICAL();		//ÍË³öÁÙ½çÇø(¿ªÖÐ¶Ï)
 			USART_RX_STA=0;
 		}
@@ -238,19 +238,11 @@ static void LCD_Disp(double u1,double u2){
 		n2/=10;
 		count2++;
 	}
-	/*
-	u1buffer[0] = u1intptr/1000;
-	u1buffer[1] = (int)u1intptr%1000/100;
-	u1buffer[2]=little;
-	
-	u2little=modf(u2,&u2intptr);
- 	u2buffer[0] = u2intptr/1000;
-	u2buffer[1] = (int)u2intptr%1000/100;
-	*/
-	//lcd_write_char(6,0,u1buffer[0]+0X30);
+
 	lcd_write_char(5,0,u1buffer[count-1]+0X30);
 	lcd_write_char(6,0,u1buffer[count-2]+0X30);
 	lcd_write_char(8,0,(little*10)+0X30);
+	lcd_write_char(11,0,MaxTemp+0X30);
 	//lcd_write_char(5,1,u2buffer[1]+0X30);
 	lcd_write_char(4,1,u2buffer[count2-1]+0X30);
 	lcd_write_char(5,1,u2buffer[count2-2]+0X30);
