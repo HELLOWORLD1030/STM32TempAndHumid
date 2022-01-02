@@ -30,7 +30,7 @@ void EXTIX_Init(void)
     //GPIOA.15	  中断线以及中断初始化配置
   	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource6);
 
-  	EXTI_InitStructure.EXTI_Line=EXTI_Line15;
+  	EXTI_InitStructure.EXTI_Line=EXTI_Line6;	
   	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
   	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
   	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
@@ -39,19 +39,11 @@ void EXTIX_Init(void)
     //GPIOA.0	  中断线以及中断初始化配置
   	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource7);
 
-   	EXTI_InitStructure.EXTI_Line=EXTI_Line0;
+   	EXTI_InitStructure.EXTI_Line=EXTI_Line7;
   	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
-  	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;
+  	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
   	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
   	EXTI_Init(&EXTI_InitStructure);		//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
-
-
- 
-  	NVIC_InitStructure.NVIC_IRQChannel = EXTI0_IRQn;			//使能按键所在的外部中断通道
-  	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2 
-  	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;					//子优先级1
-  	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能外部中断通道
-  	NVIC_Init(&NVIC_InitStructure);  	  //根据NVIC_InitStruct中指定的参数初始化外设NVIC寄存器
 		
 		NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;			//使能按键所在的外部中断通道
   	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2， 
@@ -60,11 +52,7 @@ void EXTIX_Init(void)
   	NVIC_Init(&NVIC_InitStructure); 
  
  
-   	NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;			//使能按键所在的外部中断通道
-  	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2， 
-  	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;					//子优先级1
-  	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;	
-		NVIC_Init(&NVIC_InitStructure); 
+   
 
 
 
@@ -72,40 +60,40 @@ void EXTIX_Init(void)
 }
 
  extern int MaxTemp;
-void EXTI0_IRQHandler(void)
-{
-	OSIntEnter();
-  delay_ms(10);    //消抖
-	if(KEY3==0)
-	{	  
-		LED3=!LED3;
-		LED4=!LED4;	
-	}
-	EXTI_ClearITPendingBit(EXTI_Line0);
-	OSIntExit();
-}
+ extern int MaxHum;
+extern int MinTemp;
+extern int MinHum;
  void EXTI9_5_IRQHandler(void)
 {
 		OSIntEnter();
 	delay_ms(10);   //消抖			 
 	if(KEY1==0)	{
-		MaxTemp++;
-
-	}
- 	 EXTI_ClearITPendingBit(EXTI_Line5);    //清除LINE5上的中断标志位  
-	OSIntExit();
-}
-
-
-void EXTI15_10_IRQHandler(void)
-{
-	OSIntEnter();
-  delay_ms(10);    //消抖			 
-  if(KEY2==0)	{
-		MaxTemp--;
+		if (MaxTemp<120){
+			MaxTemp++;
+		}else{
+			MaxTemp=11;
+		}
 		
+		EXTI_ClearITPendingBit(EXTI_Line5);
 	}
-	 EXTI_ClearITPendingBit(EXTI_Line15);  //清除LINE15线路挂起位
+	if(KEY2==0)	{
+		if(MinTemp<MaxTemp-1){
+			MinTemp++;;
+		}else if(MinTemp==99){
+			MinTemp=10;
+		}
+		
+		EXTI_ClearITPendingBit(EXTI_Line6);
+	}
+	if(KEY3==0){
+		if (MaxHum<90){
+			MaxHum++;
+		}else{
+			MaxHum=11;
+		}
+		EXTI_ClearITPendingBit(EXTI_Line7);
+	}
+ 	     //清除LINE5上的中断标志位  
 	OSIntExit();
 }
 

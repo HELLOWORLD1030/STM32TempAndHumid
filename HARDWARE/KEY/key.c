@@ -33,7 +33,7 @@ void KEY_Init(void)
  	GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOB5
  
 	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_7;//PA0
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD; //PA0设置成输入，默认下拉	  
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; //PA0设置成输入，默认下拉	  
 	GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOA.0
 	
 } 

@@ -9,6 +9,7 @@
 #include "DHT11.h"
 #include "LCD1602.h"
 #include<stdio.h>
+
 //START ÈÎÎñ
 //ÉèÖÃÈÎÎñÓÅÏÈ¼¶
 #define START_TASK_PRIO			10  ///¿ªÊ¼ÈÎÎñµÄÓÅÏÈ¼¶Îª×îµÍ
@@ -28,7 +29,6 @@ OS_STK DS18B20_TASK_STK[DS18B20_STK_SIZE];
 //ÈÎÎñº¯Êý
 void DS18B20_task(void *pdata);
 
-//LED1ÈÎÎñ
 //ÉèÖÃÈÎÎñÓÅÏÈ¼¶
 #define DHT11_TASK_PRIO			6
 //ÉèÖÃÈÎÎñ¶ÑÕ»´óÐ¡
@@ -65,7 +65,16 @@ void DISPLAY_task(void *pdata);
 __align(8) OS_STK USART_TASK_STK[USART_STK_SIZE]; 
 //ÈÎÎñº¯Êý
 void usart_task(void *pdata);
-int MaxTemp=20;
+#define DISPLAY_SCOPE_TASK_PRIO			8
+//ÉèÖÃÈÎÎñ¶ÑÕ»´óÐ¡
+#define DISPLAY_SCOPE_STK_SIZE			128
+//ÈÎÎñ¶ÑÕ»
+//Èç¹ûÈÎÎñÖÐÊ¹ÓÃprintfÀ´´òÓ¡¸¡µãÊý¾ÝµÄ»°Ò»µãÒª8×Ö½Ú¶ÔÆë
+__align(8) OS_STK DISPLAY_SCOPE_STK[DISPLAY_SCOPE_STK_SIZE]; 
+//ÈÎÎñº¯Êý
+void DISPLAY_SCOPE_task(void *pdata);
+int MaxTemp=120;
+int MinTemp=10;
 u8 buffer[5];
 u8 u1buffer[4]={0};   
 u8 u2buffer[4]={0};   
@@ -74,8 +83,11 @@ typedef struct {
 	double hum;
 	double temp;
 } TempCmd;
+TempCmd *temp;
 static void user_init(void);
 static void LCD_Disp(double u1,double u2);
+int MaxHum=90;
+int MinHum=10;
 int main(void)
 {
 	
@@ -84,15 +96,10 @@ int main(void)
 	uart_init(115200);    //´®¿Ú²¨ÌØÂÊÉèÖÃ
 	LED_Init();  	//LED³õÊ¼»¯
 	EXTIX_Init();
+	KEY_Init();
 	LED3=1;
-	//LED0=1;
-	//gpio_config();
-	//lcd_init();
 	gpio_config();
 	lcd_init();
-	//user_init();
-	//Ds18b20_Init();
-	//user_init();
 	OSInit();  		//UCOS³õÊ¼»¯
 	OSTaskCreate(start_task,(void*)0,(OS_STK*)&START_TASK_STK[START_STK_SIZE-1],START_TASK_PRIO); //´´½¨¿ªÊ¼ÈÎÎñ
 	OSStart(); 	//¿ªÊ¼ÈÎÎñ
@@ -109,9 +116,10 @@ void start_task(void *pdata)
 	OS_ENTER_CRITICAL();  //½øÈëÁÙ½çÇø(¹Ø±ÕÖÐ¶Ï)
 	OSTaskCreate(DHT11_task,(void*)0,(OS_STK*)&DHT11_TASK_STK[DHT11_STK_SIZE-1],DHT11_TASK_PRIO);//´´½¨DHT11
 	//OSTaskCreate(DS18B20_task,(void*)0,(OS_STK*)&DS18B20_TASK_STK[DS18B20_STK_SIZE-1],DS18B20_TASK_PRIO);//´´½¨DHT11
-  OSTaskCreate(USARTSEND_task,(void*)0,(OS_STK*)&USARTSEND_TASK_STK[USARTSEND_STK_SIZE-1],USARTSEND_TASK_PRIO);//
+  //OSTaskCreate(USARTSEND_task,(void*)0,(OS_STK*)&USARTSEND_TASK_STK[USARTSEND_STK_SIZE-1],USARTSEND_TASK_PRIO);//
 	OSTaskCreate(DISPLAY_task,(void*)0,(OS_STK*)&DISPLAY_TASK_STK[DISPLAY_STK_SIZE-1],DISPLAY_TASK_PRIO);//´
 	OSTaskCreate(usart_task,(void*)0,(OS_STK*)&USART_TASK_STK[USART_STK_SIZE-1],USART_TASK_PRIO);//
+	OSTaskCreate(DISPLAY_SCOPE_task,(void*)0,(OS_STK*)&DISPLAY_SCOPE_STK[DISPLAY_SCOPE_STK_SIZE-1],DISPLAY_SCOPE_TASK_PRIO);//
 	OSTaskSuspend(START_TASK_PRIO);//¹ÒÆð¿ªÊ¼ÈÎÎñ
 	OS_EXIT_CRITICAL();  //ÍË³öÁÙ½çÇø(¿ªÖÐ¶Ï)
 }
@@ -122,9 +130,11 @@ void DS18B20_task(void *pdata)
 	int DS18B20_Temp;
 	while(1)
 	{
+		
 		DS18B20_Temp=Ds18b20ReadTemp();//»ñÈ¡ÎÂ¶È
 		LED3=!LED3;
-		OSTimeDly(50);
+		
+		
 	}
 }
 
@@ -139,11 +149,10 @@ void DHT11_task(void *pdata)
             tempCmd.hum = buffer[0] + buffer[1] / 10.0;
             tempCmd.temp = buffer[2] + buffer[3] / 10.0;
         }
-		LED3=!LED3;
-		//LCD_Disp(tempCmd.temp,tempCmd.hum);//??u1?u2
-		if(tempCmd.temp>20){
+		if(tempCmd.temp>MaxTemp||tempCmd.temp<MinTemp){
 			LED4=!LED4;
 		}
+		tempCmd.hum=rand() % 51 + 13;
 		OSMboxPost(data1,&tempCmd);
 		OSTimeDly(300);
 		
@@ -151,7 +160,7 @@ void DHT11_task(void *pdata)
 }
 void USARTSEND_task(void *pdata)
 {
-	TempCmd *temp;
+	
 	u8 error;
 	OS_CPU_SR cpu_sr=0;
 	static float float_num=0.01;
@@ -198,7 +207,7 @@ void usart_task(void *pdata){
 }
 void DISPLAY_task(void *pdata){
 	
-	TempCmd *temp;
+	
 	u8 error;
 	
 	OS_CPU_SR cpu_sr=0;
@@ -207,18 +216,19 @@ void DISPLAY_task(void *pdata){
 	while(1)
 	{
 		temp=OSMboxPend(data1,0,&error);
+		//temp=OSMboxAccept(data1);
 		LCD_Disp((*temp).temp,(*temp).hum);//??u1?u2
 		OSTimeDly(100);
 	}
 
 }
 static void user_init(){
-	lcd_write_string(0,0,(u8*)"Temp=");
-	lcd_write_string(7,0,(u8*)".");
-	lcd_write_string(9,0,(u8*)"C");
-	lcd_write_string(0,1,(u8*)"Hum=");
+	lcd_write_string(0,0,(u8*)"T=");
+	lcd_write_string(4,0,(u8*)".");
+	lcd_write_string(6,0,(u8*)"C");
+	lcd_write_string(0,1,(u8*)"H=");
 	
-	lcd_write_string(7,1,(u8*)"%");
+	lcd_write_string(5,1,(u8*)"%");
 	
 }
 static void LCD_Disp(double u1,double u2){
@@ -239,14 +249,29 @@ static void LCD_Disp(double u1,double u2){
 		count2++;
 	}
 
-	lcd_write_char(5,0,u1buffer[count-1]+0X30);
-	lcd_write_char(6,0,u1buffer[count-2]+0X30);
-	lcd_write_char(8,0,(little*10)+0X30);
-	lcd_write_char(11,0,MaxTemp+0X30);
+	lcd_write_char(2,0,u1buffer[count-1]+0X30);
+	lcd_write_char(3,0,u1buffer[count-2]+0X30);
+	lcd_write_char(5,0,(little*10)+0X30);
 	//lcd_write_char(5,1,u2buffer[1]+0X30);
-	lcd_write_char(4,1,u2buffer[count2-1]+0X30);
-	lcd_write_char(5,1,u2buffer[count2-2]+0X30);
+	lcd_write_char(2,1,u2buffer[count2-1]+0X30);
+	lcd_write_char(3,1,u2buffer[count2-2]+0X30);
 	
+}
+void DISPLAY_SCOPE_task(void* pdata){
+	while(1){
+	lcd_write_char(8,0,MinTemp/10+0X30);
+	lcd_write_char(9,0,MinTemp%10+0x30);
+	lcd_write_char(11,0,MaxTemp/100+0X30);
+	lcd_write_char(12,0,MaxTemp/10%10+0x30);
+	lcd_write_char(13,0,MaxTemp%10+0x30);
+	lcd_write_char(8,1,MinHum/10+0X30);
+	lcd_write_char(9,1,MinHum%10+0x30);
+	lcd_write_char(11,1,MaxHum/10+0x30);
+	lcd_write_char(12,1,MaxHum%10+0x30);
+	OSTimeDly(100);
+	
+	}
+
 }
 
 
