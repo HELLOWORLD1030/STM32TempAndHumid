@@ -16,21 +16,19 @@
 
 ## 文件结构
 
+```
 ├───CORE   #stm32的启动代码
 ├───FWLIB
 │   └───STM32F10x_FWLib #STM32库函数
 │       ├───inc
 │       └───src
 ├───HARDWARE # 外设及外部中断
-│   ├───ADC
-│   ├───DHT11
-│   ├───DS18B20
-│   ├───EXTI
-│   ├───ITEMP
-│   ├───KEY
-│   ├───LCD
-│   ├───LCD1602
-│   └───LED
+│   ├───DHT11#湿度传感器
+│   ├───DS18B20 #DS18B20温度传感器
+│   ├───EXTI# 外部中断
+│   ├───KEY#按键
+│   ├───LCD1602#LCD1602
+│   └───LED #LED灯
 ├───MALLOC 
 ├───OBJ #编译后的文件
 ├───SYSTEM #系统函数，延时，串口等
@@ -44,3 +42,7 @@
 ├───USER #工程文件所在
 │   └───DebugConfig
 └───USMART
+```
+
+
+
