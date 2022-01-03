@@ -31,10 +31,18 @@ void KEY_Init(void)
 	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_5;//PC5
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; //设置成上拉输入
  	GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOB5
+	
  
 	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_7;//PA0
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; //PA0设置成输入，默认下拉	  
 	GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOA.0
+	
+	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_3;//PC5
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; //设置成上拉输入
+ 	GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOB5
+	GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_4;//PC5
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU; //设置成上拉输入
+ 	GPIO_Init(GPIOB, &GPIO_InitStructure);//初始化GPIOB5
 	
 } 
 //按键处理函数

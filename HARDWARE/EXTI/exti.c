@@ -44,14 +44,38 @@ void EXTIX_Init(void)
   	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
   	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
   	EXTI_Init(&EXTI_InitStructure);		//根据EXTI_InitStruct中指定的参数初始化外设EXTI寄存器
+		GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource3);
+
+   	EXTI_InitStructure.EXTI_Line=EXTI_Line3;
+  	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
+  	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+  	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  	EXTI_Init(&EXTI_InitStructure);
+			GPIO_EXTILineConfig(GPIO_PortSourceGPIOB,GPIO_PinSource4);
+
+   	EXTI_InitStructure.EXTI_Line=EXTI_Line4;
+  	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;	
+  	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+  	EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  	EXTI_Init(&EXTI_InitStructure);	
 		
 		NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn;			//使能按键所在的外部中断通道
   	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2， 
   	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;					//子优先级1
   	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能外部中断通道
+  	NVIC_Init(&NVIC_InitStructure);
+			
+ 
+    NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;			//使能按键所在的外部中断通道
+  	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2， 
+  	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;					//子优先级1
+  	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能外部中断通道
+  	NVIC_Init(&NVIC_InitStructure);
+			NVIC_InitStructure.NVIC_IRQChannel = EXTI4_IRQn;			//使能按键所在的外部中断通道
+  	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;	//抢占优先级2， 
+  	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x00;					//子优先级1
+  	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;								//使能外部中断通道
   	NVIC_Init(&NVIC_InitStructure); 
- 
- 
    
 
 
@@ -96,4 +120,34 @@ extern int MinHum;
  	     //清除LINE5上的中断标志位  
 	OSIntExit();
 }
+void EXTI3_IRQHandler(void)
+{
+		OSIntEnter();
+	delay_ms(10);   //消抖			 
+	if(KEY5==0)	{
+			MinTemp=10;
+		  MaxTemp=120;
+			MinHum=10;
+		  MaxHum=90;
+	}
+	EXTI_ClearITPendingBit(EXTI_Line3);
+	
+	OSIntExit();
+}
+void EXTI4_IRQHandler(void)
+{
+		OSIntEnter();
+	delay_ms(10);   //消抖			 
+	if(KEY4==0)	{
+			if(MinHum<MaxHum-1){
+			MinHum++;
+		}else if(MinHum==80){
+			MinHum=10;
+		}
+	}
+	EXTI_ClearITPendingBit(EXTI_Line4);
+	
+	OSIntExit();
+}
+
 
